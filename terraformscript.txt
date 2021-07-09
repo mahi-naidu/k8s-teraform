@@ -302,11 +302,307 @@ app1-service       LoadBalancer   172.20.183.194   aa40718ab6dd4414ebb0d6288c868
 
 
 
+kubenx ---raw code link
+-------------------------------
+ wget https://raw.githubusercontent.com/ahmetb/kubectx/master/kubens
 
+ls -lthr
+chmos 755 kubens
 
+tocheck kubens is working or not 
+-----------------------------------------------
+./kubens
 
+mv kubens /usr/local/bin/
+
+kubens app1
+
+check
+-------
+kubectl get po 
+kubectl get deployments
+kubectl get svc
+kubectl get rs
      
+kubens app2
 
+check
+-------
+kubectl get po 
+kubectl get deployments
+kubectl get svc
+kubectl get rs
+
+
+kubns ingress-nginx
+
+check
+-------
+kubectl get po 
+kubectl get deployments
+kubectl get svc
+kubectl get rs
+
+check the lb endpoint
+---------------------------
+
+kubectl get svc -o wide
+
+
+
+check the output for app2
+--------------------------------------
+take the svc---lb endpoint---and browse
+
+ad45f43f8dfaf4940bd0b9b1888cb60a-68324034.us-east-2.elb.amazonaws.com
+
+you got the belo erroe
+
+This page isn’t workingad45f43f8dfaf4940bd0b9b1888cb60a-68324034.us-east-2.elb.amazonaws.com 
+didn’t send any data.
+ERR_EMPTY_RESPONSE
+
+kubectl get deployment
+
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+nginx-deployment   10/10   10           10          61m
+
+
+kubectl get deployment -o wide
+
+
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES         SELECTOR
+nginx-deployment   10/10   10           10          62m   nginx        nginx:1.14.2   app=nginx
+
+
+
+in the above statements to check the selector  nginx-deployment----to----app=nginx
+                                                                           nginx----to---- app= nginx
+
+edit the app2-svc.yaml
+
+
+kubectl apply -f app2-svc.yaml 
+
+
+go and refresh the browser
+
+you got the out put
+----------------------------------
+
+Welcome to nginx!
+If you see this page, the nginx web server is successfully installed and working. Further configuration is required.
+
+For online documentation and support please refer to nginx.org.
+Commercial support is available at nginx.com.
+
+Thank you for using nginx.
+
+kubectl get svc -o wide          check this command
+
+
+
+create one more app3
+----------------------------------------
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: app3
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: app3
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  replicas: 5 # tells deployment to run 2 pods matching the template
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app3-service
+  namespace: app3
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer
+
+
+save and exit
+
+the check    kubens
+
+kubens app3
+
+kubectl get po
+kubectl get deployments
+kubectl get rs
+kubectl get svc
+
+finally checkt the lb ---endpoint----browse-----you got nginx page
+
+
+kubectl get po | grep -i running
+
+
+
+kubectl get po | grep -i running | wc -l
+
+create one more app4
+---------------------------
+vi app4.yaml
+
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: app4
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: app4
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  replicas: 5 # tells deployment to run 2 pods matching the template
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app4-service
+  namespace: app4
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer
+
+
+kubectl apply -f app4.yaml
+
+kubectl get deployment
+
+edit option
+---------------
+
+kubectl edit deployment <deployment name>
+
+modify the replicaset:
+
+save and exit
+
+
+
+
+create ingress object
+----------------------------------
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: app4
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: app4
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  replicas: 1 # tells deployment to run 2 pods matching the template
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app4-svc
+  namespace: app4
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+ name: app4-ingress
+ namespace: app4
+spec:
+ rules:
+ - host: krishna.kkmn.info
+   http:
+     paths:
+     - path:
+       backend:
+         serviceName: app4-svc
+         servicePort: 80
+
+
+
+kubectl apply -f app4.yaml
+
+kubens app4
+
+kubectl get po
+kubectl get deployments
+kubectl get svc
+kubectl get rs
+kubectl get ing
+
+in this place you are see the  nlb lb endpoint and also the  dns name
+
+then we will create the record set through thr r53
+
+the chect lically 
+nslookup dns name
+
+go to browser then access the dns name
 
 
 
